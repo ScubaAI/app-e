@@ -4,6 +4,8 @@ import math
 
 root = Path(__file__).resolve().parent / "images"
 root.mkdir(parents=True, exist_ok=True)
+products_root = root / "productos"
+products_root.mkdir(parents=True, exist_ok=True)
 
 COLORS = {
     "core": (0, 240, 255),
@@ -199,6 +201,34 @@ def make_detail_cf(path, title, metric, active_segs, icon, accent):
     img.save(path, quality=95)
 
 
+def make_product_cf(path, title, metric, icon, accent):
+    img = Image.new("RGB", (1200, 900), COLORS["base"])
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    draw.rectangle([60, 60, 1140, 840], fill=COLORS["panel"], outline=COLORS["dim"], width=2)
+    draw.rectangle([60, 60, 1140, 120], fill=(15, 18, 24))
+    draw.line([(60, 120), (1140, 120)], fill=COLORS["core"], width=1)
+
+    for rx, ry in [(90, 90), (1110, 90), (90, 810), (1110, 810)]:
+        draw_rivet(draw, rx, ry)
+
+    draw.text((90, 80), f"PRODUCTO // {title.upper()}", fill=COLORS["core"], font=load_font(20, True))
+
+    panel = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    glow = ImageDraw.Draw(panel)
+    draw_icon(glow, icon, 600, 420, accent + (120,), s=2.4)
+    panel = panel.filter(ImageFilter.GaussianBlur(18))
+    img.paste(panel, (0, 0), panel)
+    draw_icon(draw, icon, 600, 420, accent, s=2.4)
+
+    draw.text((120, 610), title, fill=COLORS["text"], font=load_font(44, True))
+    draw.text((120, 675), metric, fill=COLORS["warn"], font=load_font(28, True))
+    draw.rectangle([120, 725, 1080, 760], fill=COLORS["base"], outline=COLORS["dim"], width=2)
+    draw_segmented_bar(draw, 150, 735, 900, 16, 12, accent, 8)
+
+    img.save(path, quality=95)
+
+
 make_hero_cf(root / "hero-panel.jpg")
 make_logo_cf(root / "logo-appe.jpg")
 make_detail_cf(root / "svc-electricidad.jpg", "Electricidad", "127/220V", 9, "bolt", COLORS["warn"])
@@ -208,6 +238,13 @@ make_detail_cf(root / "svc-camaras.jpg", "CCTV", "1080P", 8, "cam", COLORS["warn
 make_detail_cf(root / "svc-presurizacion.jpg", "Presurización", "40 PSI", 5, "gauge", COLORS["core"])
 make_detail_cf(root / "svc-handyman.jpg", "Handyman", "24/7", 10, "hammer", COLORS["crit"])
 
+make_product_cf(products_root / "visita-diagnostico.jpg", "Visita + Diagnóstico", "Electricidad // Handyman", "bolt", COLORS["warn"])
+make_product_cf(products_root / "mantenimiento-clima.jpg", "Mantenimiento de Clima", "Mini Split ≤ 2T", "snow", COLORS["core"])
+make_product_cf(products_root / "instalacion-clima.jpg", "Instalación de Clima", "Mini Split ≤ 2T", "snow", COLORS["core"])
+make_product_cf(products_root / "instalacion-camara.jpg", "Cámara CCTV", "Por pieza // 1080P", "cam", COLORS["warn"])
+make_product_cf(products_root / "presurizador.jpg", "Sistema de Presurización", "Flujo constante", "gauge", COLORS["core"])
+make_product_cf(products_root / "ventilador-techo.jpg", "Ventilador de Techo", "Montaje + conexión", "bolt", COLORS["warn"])
+
 print("Cherenkov Forge v1.1 — Alta Tensión:")
-for path in sorted(root.iterdir()):
-    print(f"{path.name} ({path.stat().st_size // 1024} KB)")
+for path in sorted(root.rglob("*.jpg")):
+    print(f"{path.relative_to(root.parent).as_posix()} ({path.stat().st_size // 1024} KB)")
